@@ -613,6 +613,36 @@ table.field {
     border-color: #40E0D0;
     background: transparent;
 }
+.switch-in-legend .swatch-fainted {
+    border-color: red;
+    background: transparent;
+}
+
+/* Fainted checkbox overlay on enemy icons */
+.pokemon-icon-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.pokemon-icon-wrapper .fainted-checkbox {
+    display: none;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    z-index: 2;
+    accent-color: red;
+}
+.fainted-checkboxes-visible .fainted-checkbox {
+    display: block;
+}
+.pokemon-icon-wrapper.fainted .pokemon-icon {
+    outline: 2px solid red;
+    border-color: red;
+    opacity: 0.5;
+}
+
 .switch-in-note {
     font-size: 0.7em;
     margin-top: 4px;

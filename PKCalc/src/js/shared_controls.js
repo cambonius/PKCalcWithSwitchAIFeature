@@ -602,6 +602,7 @@ $(".set-selector").change(function () {
 			$("#gravity").prop("checked", CURRENT_TRAINER == "Champion Cynthia");
 			var enemyContainer = $("#enemy");
 			var enemyHtml = ""
+			var switchInToggled = $("#switchInBorders").prop("checked");
 			var enemyTagContainer = $("#enemy-tag");
 			var enemyTagHtml = ""
 			var tagContainer = $("#tag-partner");
@@ -617,7 +618,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<span class="pokemon-icon-wrapper" data-set="${enemyParty[i]}" data-side="p2"><input type="checkbox" class="fainted-checkbox" title="Mark fainted"><img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" title="${enemyParty[i]}"></span>`;
 				}
 				var enemyTagParty = getTrainerPokemon(tagBattle.enemy2);
 				for (var i in enemyTagParty) {
@@ -639,7 +640,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<span class="pokemon-icon-wrapper" data-set="${enemyParty[i]}" data-side="p2"><input type="checkbox" class="fainted-checkbox" title="Mark fainted"><img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" title="${enemyParty[i]}"></span>`;
 				}
 				var enemyTagParty = getTrainerPokemon(doubleBattle.enemy2);
 				for (var i in enemyTagParty) {
@@ -653,7 +654,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<span class="pokemon-icon-wrapper" data-set="${enemyParty[i]}" data-side="p2"><input type="checkbox" class="fainted-checkbox" title="Mark fainted"><img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" title="${enemyParty[i]}"></span>`;
 				}
 			} else {
 				$("#singles-format").prop("checked", true);
@@ -661,7 +662,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<span class="pokemon-icon-wrapper" data-set="${enemyParty[i]}" data-side="p2"><input type="checkbox" class="fainted-checkbox" title="Mark fainted"><img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" title="${enemyParty[i]}"></span>`;
 				}
 			}
 			enemyContainer.html(enemyHtml);
@@ -677,15 +678,44 @@ $(".set-selector").change(function () {
 			switchAIContainer.html(switchAIHtml);
 			$("#enemy .pokemon-icon, #enemy-tag .pokemon-icon, #tag-partner .pokemon-icon").on({
 				click: function() {
-					loadSet($(this).attr("data-set"), $(this).attr("data-side"));
+					var wrapper = $(this).closest(".pokemon-icon-wrapper");
+					var setName = wrapper.length ? wrapper.attr("data-set") : $(this).attr("data-set");
+					var side = wrapper.length ? wrapper.attr("data-side") : $(this).attr("data-side");
+					loadSet(setName, side);
 				},
 				drag: pickup,
 				drop: setDrop
 			});
+			// Fainted checkboxes on enemy icons
+			$("#enemy .fainted-checkbox").on("click", function(e) {
+				e.stopPropagation();
+			}).on("change", function(e) {
+				e.stopPropagation();
+				var wrapper = $(this).closest(".pokemon-icon-wrapper");
+				var setName = wrapper.attr("data-set");
+				if ($(this).prop("checked")) {
+					wrapper.addClass("fainted");
+					$(`.switch-ai .switching-from[data-set='${setName}']`).addClass("dead");
+				} else {
+					wrapper.removeClass("fainted");
+					$(`.switch-ai .switching-from[data-set='${setName}']`).removeClass("dead");
+				}
+				applySwitchInBorders();
+			});
+			// Show checkboxes if switch-in borders is currently toggled
+			if (switchInToggled) {
+				$("#enemy").addClass("fainted-checkboxes-visible");
+			}
 			$(".switch-ai .pokemon-icon").on({
 				click: function() {
-					if ($(this).closest(".switching-from").hasClass("dead")) $(this).closest(".switching-from").removeClass("dead");
-					else $(this).closest(".switching-from").addClass("dead");
+					var switchingFrom = $(this).closest(".switching-from");
+					var setName = switchingFrom.attr("data-set");
+					switchingFrom.toggleClass("dead");
+					var isDead = switchingFrom.hasClass("dead");
+					// Sync checkbox on team icon
+					var wrapper = $(`#enemy .pokemon-icon-wrapper[data-set='${setName}']`);
+					wrapper.find(".fainted-checkbox").prop("checked", isDead);
+					if (isDead) wrapper.addClass("fainted"); else wrapper.removeClass("fainted");
 					applySwitchInBorders();
 				},
 				dragstart: function(e) {
@@ -1557,6 +1587,10 @@ var setDropzones = ".poke-info, .import-team-text";
 var searchActive = false;
 function pickup(e) {
 	dragging = $(e.target);
+	// If dragged element has no data-set but is inside a wrapper that does, use the wrapper
+	if (!dragging.attr("data-set") && dragging.closest(".pokemon-icon-wrapper").length) {
+		dragging = dragging.closest(".pokemon-icon-wrapper");
+	}
 }
 function iconDrop(e) {
 	e.preventDefault();
@@ -2136,9 +2170,9 @@ function getSwitchInPredictions(playerSetName) {
 	// Exclude the currently active enemy Pokémon
 	partyData = partyData.filter(function(d) { return d.setName !== currentEnemySet; });
 
-	// Also exclude dead Pokémon from the switch-ai area
+	// Also exclude fainted Pokémon (checked checkbox on team icons)
 	partyData = partyData.filter(function(d) {
-		return !$(`.switch-ai .switching-from[data-set='${d.setName}']`).hasClass("dead");
+		return !$(`#enemy .pokemon-icon-wrapper[data-set='${d.setName}']`).hasClass("fainted");
 	});
 
 	if (partyData.length === 0) return [];
@@ -2202,10 +2236,12 @@ function applySwitchInBorders() {
 
 	if (!$("#switchInBorders").prop("checked")) {
 		$("#switchInLegend, #switchInNote").addClass("hide");
+		$("#enemy").removeClass("fainted-checkboxes-visible");
 		return;
 	}
 
 	$("#switchInLegend").removeClass("hide");
+	$("#enemy").addClass("fainted-checkboxes-visible");
 
 	var playerSetName = $("#p1 .set-selector").val();
 	if (!playerSetName) return;
@@ -2223,9 +2259,9 @@ function applySwitchInBorders() {
 		$("#switchInNote").addClass("hide");
 	}
 
-	// Apply highlights to matching enemy icons
+	// Apply highlights to matching enemy icons (use wrapper's data-set)
 	for (var i = 0; i < predictions.length; i++) {
-		$(`.enemy .pokemon-icon[data-set="${predictions[i]}"]`).addClass("switch-in-highlight");
+		$(`.enemy .pokemon-icon-wrapper[data-set="${predictions[i]}"] .pokemon-icon`).addClass("switch-in-highlight");
 	}
 }
 
@@ -2244,7 +2280,7 @@ function applyActiveMonBorders() {
 	// Enemy side: highlight the icon in enemy that matches the current p2 set
 	var p2Set = $("#p2 .set-selector").val();
 	if (p2Set) {
-		$(`.enemy .pokemon-icon[data-set="${p2Set}"], #enemy-tag .pokemon-icon[data-set="${p2Set}"]`).addClass("active-mon");
+		$(`.enemy .pokemon-icon-wrapper[data-set="${p2Set}"] .pokemon-icon, #enemy-tag .pokemon-icon[data-set="${p2Set}"]`).addClass("active-mon");
 	}
 }
 
@@ -2259,7 +2295,7 @@ function removeSet(set) {
 	delete customSets[mon][setName];
 	delete setdex[mon][setName];
 	updateDex(customSets);
-	$(`.pokemon-icon[data-set="${set}"]`).remove();
+	$(`.pokemon-icon[data-set="${set}"], .pokemon-icon-wrapper[data-set="${set}"]`).remove();
 }
 
 function deadSet(set, dead) {
