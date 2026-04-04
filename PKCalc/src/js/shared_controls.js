@@ -1849,29 +1849,17 @@ $("#speedBorders, #damageColors").on("change", function() {
 
 /* ===== Switch-In AI Logic (Gen 4) ===== */
 
-// Bugged Pokémon: the AI incorrectly treats certain immunities as SE
-// The keys are species IDs; values are { attackType, defenseType } that the bug affects.
-// The bug occurs when the second type grants an immunity but the AI's lookup table
-// returns SE instead of 0×.
+// Bugged Pokémon: the AI's immunity check fails for these species.
+// When checking if a move type is SE, the game checks type1 then type2 in internal order.
+// If type1 grants immunity (0x) but type2 is weak (2x), the SE result overwrites the immunity.
+// Only these 5 Pokémon are affected in standard Gen 4 games (per pret/pokeplatinum source).
+// See: https://github.com/pret/pokeplatinum/blob/main/src/battle/battle_lib.c#L2399
 var BUGGED_SWITCH_POKEMON = {
-	"skarmory":   { atkType: "ground",    bugType: "flying" },
-	"aerodactyl": { atkType: "ground",    bugType: "flying" },
-	"zapdos":     { atkType: "ground",    bugType: "flying" },
-	"zubat":      { atkType: "ground",    bugType: "flying" },
-	"golbat":     { atkType: "ground",    bugType: "flying" },
-	"crobat":     { atkType: "ground",    bugType: "flying" },
-	"moltres":    { atkType: "ground",    bugType: "flying" },
-	"hooh":       { atkType: "ground",    bugType: "flying" },
-	"barboach":   { atkType: "electric",  bugType: "ground" },
-	"wooper":     { atkType: "electric",  bugType: "ground" },
-	"gastrodon":  { atkType: "electric",  bugType: "ground" },
-	"swampert":   { atkType: "electric",  bugType: "ground" },
-	"whiscash":   { atkType: "electric",  bugType: "ground" },
-	"quagsire":   { atkType: "electric",  bugType: "ground" },
-	"marshtomp":  { atkType: "electric",  bugType: "ground" },
-	"altaria":    { atkType: "dragon",    bugType: "fairy" },
-	"mawile":     { atkType: "poison",    bugType: "fairy" },
-	"girafarig":  { atkType: "ghost",     bugType: "normal" }
+	"gligar":     { atkType: "electric",  bugType: "flying" },  // Ground/Flying — Electric: Ground immune, Flying weak
+	"gliscor":    { atkType: "electric",  bugType: "flying" },  // Ground/Flying — Electric: Ground immune, Flying weak
+	"aerodactyl": { atkType: "ground",    bugType: "flying" },  // Rock/Flying — Ground: Flying immune, Rock weak
+	"skarmory":   { atkType: "ground",    bugType: "flying" },  // Steel/Flying — Ground: Flying immune, Steel weak
+	"girafarig":  { atkType: "ghost",     bugType: "normal" }   // Normal/Psychic — Ghost: Normal immune, Psychic weak (via internal order)
 };
 
 /**
@@ -1890,29 +1878,53 @@ function getTypeEffectiveness(atkType, defType) {
  * Check if a move type is SE against defender, considering the Gen 4 bug.
  * The bug makes certain species see specific type matchups as SE when they should be immune.
  */
-function isMoveTypeSEBugged(moveType, defenderTypes, defenderSpeciesId, defenderAbilities) {
+function isMoveTypeSEBugged(moveType, defenderTypes, defenderSpeciesId, defenderAbilities, attackerAbilities, gravityActive, defenderItem) {
 	var mt = moveType.toLowerCase();
+	attackerAbilities = attackerAbilities || [];
+	defenderAbilities = defenderAbilities || [];
+
+	// Normalize: if the attacker has Normalize, all its moves become Normal type
+	if (attackerAbilities.indexOf("Normalize") !== -1 || attackerAbilities.indexOf("normalize") !== -1) {
+		mt = "normal";
+	}
+
 	var effectiveness = 1;
 	for (var i = 0; i < defenderTypes.length; i++) {
 		if (!defenderTypes[i]) continue;
 		var dt = defenderTypes[i].toLowerCase();
+
+		// Scrappy: Normal/Fighting moves hit Ghost types (immunity negated)
+		var hasScrappy = attackerAbilities.indexOf("Scrappy") !== -1 || attackerAbilities.indexOf("scrappy") !== -1;
+		if (hasScrappy && dt === "ghost" && (mt === "normal" || mt === "fighting")) {
+			// Ghost immunity is negated; treat as 1x
+			continue;
+		}
+
 		var mult = getTypeEffectiveness(mt, dt);
 		effectiveness *= mult;
 	}
 
-	// Check for the bug: if the defender is in the bugged list and the move matches the bug trigger
+	// Check for Bug #2: Immunity check fail
+	// For certain dual-type Pokémon, the immunity from type1 is overwritten by the SE from type2
 	var bug = BUGGED_SWITCH_POKEMON[defenderSpeciesId];
 	if (bug && mt === bug.atkType.toLowerCase()) {
-		// The bugged Pokémon incorrectly sees this as SE
-		// Only applies when the effectiveness would normally be 0 (immune)
+		// The bugged Pokémon incorrectly sees this move type as SE
 		if (effectiveness === 0) {
-			effectiveness = 2.0; // Treated as SE
+			effectiveness = 2.0; // Treated as SE despite immunity
 		}
 	}
 
-	// AI cheats to see Levitate in Phase 1
-	if (mt === "ground" && defenderAbilities && defenderAbilities.includes("levitate")) {
-		effectiveness = 0;
+	// Levitate check: AI cheats to see player's Levitate in Phase 1
+	// Negated by: Mold Breaker on attacker, Gravity active, Iron Ball on defender
+	if (mt === "ground" && defenderAbilities) {
+		var hasLevitate = defenderAbilities.indexOf("Levitate") !== -1 || defenderAbilities.indexOf("levitate") !== -1;
+		if (hasLevitate) {
+			var hasMoldBreaker = attackerAbilities.indexOf("Mold Breaker") !== -1 || attackerAbilities.indexOf("moldbreaker") !== -1;
+			var hasIronBall = defenderItem && (defenderItem === "Iron Ball" || defenderItem.toLowerCase() === "iron ball");
+			if (!hasMoldBreaker && !gravityActive && !hasIronBall) {
+				effectiveness = 0;
+			}
+		}
 	}
 
 	return effectiveness > 1;
@@ -1942,67 +1954,110 @@ function calcTypeSwitchScore(aiTypes, playerTypes) {
 
 	var total = score1 + score2;
 
-	// Bug: 8× total (quad + quad) causes overflow, treated as value between 2× and 1.5×
-	// Per the doc: "8x matchups come out in between 2x matchups and 1.5x matchups"
-	if (total >= 8) total = 1.75;
+	// Multiply by 40 to get the raw integer score (matches game's internal representation)
+	var rawScore = Math.round(total * 40);
 
-	return total;
+	// Bug #1: Overflow — max score is 255, values > 255 wrap via mod 256
+	// e.g. 4x+4x = 8, 8*40 = 320, 320 mod 256 = 64
+	rawScore = rawScore % 256;
+
+	return rawScore;
 }
 
 /**
- * Calculate Phase 2 damage for a teammate.
- * Per Gen_4_Switch_AI.txt: "calculate the damage as if the dead pokemon used
- * each of its teammates attacks (as if it called them from assist)"
- * The dead mon's stats, stat boosts, and item are used; the teammate's moves are borrowed.
- * Returns the max roll (with 255 overflow) of the best teammate move.
+ * Calculate Phase 2 damage for all party members, implementing the carry-over bug.
+ * Per the guide: the dead mon's stats/item are used with each teammate's moves.
+ * Moves with basePower === 1 are "skipped" (inherit the last calculated damage).
+ * The carry-over accumulator starts at the LAST Pokemon's type matchup score from Phase 1.
+ * Life Orb damage boost does NOT apply in this stage.
+ * Dead mon at 0 HP triggers pinch abilities (Blaze, Swarm, etc.) since its HP is 0.
+ *
+ * @param {Object} deadMon - The calc Pokemon object for the dead enemy mon
+ * @param {Array} partyData - Array of party member data objects (in party order)
+ * @param {Object} playerPokemon - The calc Pokemon object for the player's active mon
+ * @param {number} lastTypeScore - The type matchup score of the last party member (for carry-over bug)
  */
-function calcPhase2Damage(deadMon, teammateSetName, playerPokemon) {
+function calcPhase2AllDamage(deadMon, partyData, playerPokemon, lastTypeScore) {
 	try {
-		// Parse the teammate's set to get its moves
-		var tmName = teammateSetName.substring(0, teammateSetName.indexOf(" ("));
-		var tmSetKey = teammateSetName.substring(teammateSetName.indexOf("(") + 1, teammateSetName.lastIndexOf(")"));
-		var tmSet = setdex[tmName] && setdex[tmName][tmSetKey];
-		if (!tmSet || !tmSet.moves) return 0;
-
 		var field = createField().clone().swap(); // AI is attacking, so swap field
-		var results = [];
-		for (var m = 0; m < tmSet.moves.length; m++) {
-			var moveName = tmSet.moves[m];
-			var moveObj = new calc.Move(gen, moves[moveName] ? moveName : "(No Move)", {
-				ability: deadMon.ability,
-				item: deadMon.item
-			});
-			var result = calc.calculate(gen, deadMon, playerPokemon, moveObj, field);
-			var dmg = result.damage;
-			var maxRoll;
-			if (typeof dmg === "number") {
-				maxRoll = dmg;
-			} else if (Array.isArray(dmg)) {
-				if (dmg.length > 0 && Array.isArray(dmg[0])) {
-					// Parental bond
-					maxRoll = (typeof dmg[0] === "number" ? dmg[0] : dmg[0][dmg[0].length - 1]) +
-					          (typeof dmg[1] === "number" ? dmg[1] : dmg[1][dmg[1].length - 1]);
+
+		// The damage carry-over accumulator starts at the last Pokemon's type score
+		var lastDamage = lastTypeScore;
+
+		for (var p = 0; p < partyData.length; p++) {
+			var tmSet = partyData[p].set;
+			if (!tmSet || !tmSet.moves) {
+				partyData[p].score = 0;
+				continue;
+			}
+
+			var moveDamages = [];
+			var movesArr = tmSet.moves;
+			for (var m = 0; m < movesArr.length; m++) {
+				var moveName = movesArr[m];
+				var moveData = moves[moveName];
+
+				// Check basePower to determine how to handle the move
+				var bp = moveData ? moveData.basePower : 0;
+
+				if (bp === 0) {
+					// Status move (bp:0): damage = 0, update accumulator
+					moveDamages.push(0);
+					lastDamage = 0;
+				} else if (bp === 1) {
+					// Variable power move (bp:1): SKIP calculation, inherit carry-over
+					// The damage for this move = whatever was last calculated
+					moveDamages.push(lastDamage);
+					// Do NOT update lastDamage (the move is "skipped")
 				} else {
-					maxRoll = dmg[dmg.length - 1];
+					// Regular damaging move: calculate damage normally
+					var moveObj = new calc.Move(gen, moves[moveName] ? moveName : "(No Move)", {
+						ability: deadMon.ability,
+						item: deadMon.item
+					});
+					var result = calc.calculate(gen, deadMon, playerPokemon, moveObj, field);
+					var dmg = result.damage;
+					var maxRoll;
+					if (typeof dmg === "number") {
+						maxRoll = dmg;
+					} else if (Array.isArray(dmg)) {
+						if (dmg.length > 0 && Array.isArray(dmg[0])) {
+							// Parental bond
+							maxRoll = (typeof dmg[0] === "number" ? dmg[0] : dmg[0][dmg[0].length - 1]) +
+							          (typeof dmg[1] === "number" ? dmg[1] : dmg[1][dmg[1].length - 1]);
+						} else {
+							maxRoll = dmg[dmg.length - 1];
+						}
+					} else {
+						maxRoll = 0;
+					}
+					// Bug #1 - Damage Overflow: max is 255, subtract 256 until ≤ 255
+					// e.g. 711 → 711-256=455 → 455-256=199
+					while (maxRoll > 255) {
+						maxRoll -= 256;
+					}
+					moveDamages.push(maxRoll);
+					lastDamage = maxRoll; // Update accumulator
 				}
-			} else {
-				maxRoll = 0;
 			}
-			// Apply 255 overflow bug: "270 damage → 270 − 255 = 15 damage" per Gen_4_Switch_AI.txt
-			if (maxRoll > 255) {
-				maxRoll = maxRoll - 255;
-			}
-			results.push(maxRoll);
+
+			// The Pokemon's score is the max damage across all its moves
+			partyData[p].score = moveDamages.length > 0 ? Math.max.apply(null, moveDamages) : 0;
 		}
-		return Math.max.apply(null, results);
 	} catch (ex) {
-		return 0;
+		// On error, set all scores to 0
+		for (var p = 0; p < partyData.length; p++) {
+			if (partyData[p].score === undefined) partyData[p].score = 0;
+		}
 	}
 }
 
 /**
  * Determine which enemy Pokémon would be sent out next based on the Gen 4 switch AI.
- * Returns an array of indices (into the enemy party) that have the best score.
+ * Implements the full algorithm from the Gen 4 AI Mechanics Guide:
+ *   Phase 1: Type matchup score (×40, mod 256) + SE move check
+ *   Phase 2: Most damage check (dead mon's stats, skip bp:1 moves, overflow mod 256, carry-over bug)
+ * Returns an array of set names that are predicted switch-ins (ties included).
  * @param {string} playerSetName - The set name of the player's active Pokémon
  */
 function getSwitchInPredictions(playerSetName) {
@@ -2026,9 +2081,13 @@ function getSwitchInPredictions(playerSetName) {
 	// Get the currently selected enemy Pokémon (the one that just fainted / is active)
 	var currentEnemySet = $("#p2 .set-selector").val();
 
-	// Get player's species data for Levitate check (AI CHEATS to see Levitate in Phase 1)
+	// Get player's species data for ability checks (AI cheats to see Levitate in Phase 1)
 	var playerDexSpecies = SPECIES[toID(playerPokeName)];
 	var playerAbilities = playerDexSpecies ? playerDexSpecies.abilities : [];
+
+	// Get Gravity state and player's item (for Levitate negation checks)
+	var gravityActive = $("#gravity").prop("checked");
+	var playerItem = $("#p1 .item").val() || "";
 
 	// Build party data
 	var partyData = [];
@@ -2047,7 +2106,8 @@ function getSwitchInPredictions(playerSetName) {
 		var dexSpecies = SPECIES[speciesId];
 		var aiAbilities = dexSpecies ? dexSpecies.abilities : [];
 
-		// Check if this mon has any SE move against the player (always with Levitate cheating)
+		// Check if this mon has any SE move against the player
+		// Includes ability adjustments: Normalize, Levitate+MoldBreaker+Gravity+IronBall, Scrappy
 		var hasSEMove = false;
 		var movesArr = set.moves || [];
 		for (var m = 0; m < movesArr.length; m++) {
@@ -2055,7 +2115,7 @@ function getSwitchInPredictions(playerSetName) {
 			var moveData = moves[moveName];
 			if (!moveData) continue;
 			var moveType = moveData.type || "";
-			if (isMoveTypeSEBugged(moveType, playerTypes, toID(playerPokeName), playerAbilities)) {
+			if (isMoveTypeSEBugged(moveType, playerTypes, toID(playerPokeName), playerAbilities, aiAbilities, gravityActive, playerItem)) {
 				hasSEMove = true;
 				break;
 			}
@@ -2083,35 +2143,49 @@ function getSwitchInPredictions(playerSetName) {
 
 	if (partyData.length === 0) return [];
 
-	// PHASE 1: Check if any remaining Pokémon have SE moves
+	// Calculate type matchup scores for ALL party members (needed for Phase 1 and Phase 2 carry-over)
+	for (var i = 0; i < partyData.length; i++) {
+		partyData[i].typeScore = calcTypeSwitchScore(partyData[i].types, playerTypes);
+	}
+
+	// PHASE 1: Starting from the mon with the highest type score, check for any SE move.
+	// If found, switch to it. Ties broken by party order.
 	var seParty = partyData.filter(function(d) { return d.hasSEMove; });
 
 	if (seParty.length > 0) {
-		// Score each by their own type matchup against the player
 		var bestScore = -Infinity;
 		for (var i = 0; i < seParty.length; i++) {
-			var score = calcTypeSwitchScore(seParty[i].types, playerTypes);
-			seParty[i].score = score;
-			if (score > bestScore) bestScore = score;
+			if (seParty[i].typeScore > bestScore) bestScore = seParty[i].typeScore;
 		}
-		var winners = seParty.filter(function(d) { return d.score === bestScore; });
+		var winners = seParty.filter(function(d) { return d.typeScore === bestScore; });
 		return winners.map(function(d) { return d.setName; });
 	}
 
-	// PHASE 2: No SE moves — calculate damage as if the dead Pokémon used teammates' moves
-	// "as if the dead pokemon used each of its teammates attacks (as if it called them from assist)"
-	// Dead mon's stats, stat changes, and item are used (from the P2 UI panel)
+	// PHASE 2: No SE moves — calculate damage using dead mon's stats with teammates' moves.
+	// The carry-over bug: the accumulator starts at the LAST party member's type score.
 	try {
 		var playerMon = createPokemon($("#p1"));
 		var deadMon = createPokemon($("#p2")); // The currently selected (dead) enemy mon
+
+		// Get the last party member's type score for carry-over bug initialization
+		var lastTypeScore = partyData[partyData.length - 1].typeScore;
+
+		// Calculate all damage with carry-over (modifies partyData[i].score in place)
+		calcPhase2AllDamage(deadMon, partyData, playerMon, lastTypeScore);
+
+		// Find the mon with the highest damage score
 		var bestDmg = -1;
 		for (var i = 0; i < partyData.length; i++) {
-			var dmg = calcPhase2Damage(deadMon, partyData[i].setName, playerMon);
-			partyData[i].score = dmg;
-			if (dmg > bestDmg) bestDmg = dmg;
+			if (partyData[i].score > bestDmg) bestDmg = partyData[i].score;
 		}
-		// Ties: if multiple mons deal the same max damage that KOs (>= player HP at full),
-		// they tie. Otherwise highest damage wins.
+
+		// Trap #3: If no Pokemon has any move that does damage, send out first in party order
+		if (bestDmg <= 0) {
+			return [partyData[0].setName];
+		}
+
+		// Trap #4: AI does NOT check if the move kills — just picks highest raw damage.
+		// Ties broken by party order (first in array wins, which is party order).
 		var winners = partyData.filter(function(d) { return d.score === bestDmg; });
 		return winners.map(function(d) { return d.setName; });
 	} catch (ex) {
