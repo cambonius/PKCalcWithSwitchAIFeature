@@ -100,6 +100,12 @@ window.calc = Object.assign(window.calc || {}, {
   Pokemon: exports.Pokemon,
   Move: exports.Move,
   calculate: exports.calculate,
+  calcStat: function(gen, stat, base, iv, ev, level, nature) {
+    return exports.Stats.calcStat(
+      typeof gen === 'number' ? window.calc.Generations.get(gen) : gen,
+      stat === 'spc' ? 'spa' : stat, base, iv, ev, level, nature
+    );
+  },
   Result: exports.Result,
   toID: exports.toID,
   STATS: exports.STATS,
