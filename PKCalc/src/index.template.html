@@ -1485,21 +1485,36 @@
         <script type="text/javascript">
             // index.js uses Object.defineProperty getters for re-exports which
             // cause infinite recursion when all scripts share a single exports
-            // object. Instead, we inline the two functions it adds (calculate
-            // wrapper + calcStat) and wire up calc as the global namespace.
+            // object. Instead, we inline the wrappers it provides.
+            var _Generations = exports.Generations;
+            function _gen(g) { return typeof g === 'number' ? _Generations.get(g) : g; }
+
             var _origCalculate = exports.calculate;
             exports.calculate = function(gen, attacker, defender, move, field) {
-                return _origCalculate(
-                    typeof gen === 'number' ? exports.Generations.get(gen) : gen,
-                    attacker, defender, move, field
-                );
+                return _origCalculate(_gen(gen), attacker, defender, move, field);
             };
+
+            var _OrigMove = exports.Move;
+            exports.Move = function(gen, name, options) {
+                return new _OrigMove(_gen(gen), name, options || {});
+            };
+            exports.Move.prototype = _OrigMove.prototype;
+
+            var _OrigPokemon = exports.Pokemon;
+            exports.Pokemon = function(gen, name, options) {
+                return new _OrigPokemon(_gen(gen), name, options || {});
+            };
+            exports.Pokemon.prototype = _OrigPokemon.prototype;
+            exports.Pokemon.getForme = function(gen, speciesName, item, moveName) {
+                return _OrigPokemon.getForme(_gen(gen), speciesName, item, moveName);
+            };
+
             exports.calcStat = function(gen, stat, base, iv, ev, level, nature) {
                 return exports.Stats.calcStat(
-                    typeof gen === 'number' ? exports.Generations.get(gen) : gen,
-                    stat === 'spc' ? 'spa' : stat, base, iv, ev, level, nature
+                    _gen(gen), stat === 'spc' ? 'spa' : stat, base, iv, ev, level, nature
                 );
             };
+
             var calc = exports;
         </script>
         <script type="text/javascript" src="./js/settings-controls.js?"></script>
