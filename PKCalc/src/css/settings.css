@@ -11,6 +11,7 @@
     .label {
         margin: 0px;
         font-weight: bold;
+        text-align: center;
     }
 
     #dupes {

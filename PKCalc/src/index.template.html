@@ -125,7 +125,7 @@
 
         <div aria-label="Pok&eacute;mon 1" class="panel" role="region">
             <fieldset class="poke-info" id="p1">
-                <legend align="center">Pok&eacute;mon 1</legend>
+                <legend>Pok&eacute;mon 1</legend>
                 <input type="text" class="set-selector calc-trigger" />
                 <!-- <span id="importedSetsOptions" style="width:auto; display:none">
                     <input type="checkbox" id="importedSets" /> Only show imported sets <br />
@@ -666,22 +666,22 @@
             </fieldset>
             <div aria-label="Team and Box" role="region">
                 <fieldset class="team-box">
-                    <legend align="center">Team/Box</legend>
-                    <legend align="center">Team</legend>
+                    <legend>Team/Box</legend>
+                    <legend>Team</legend>
                     <div id="team" class="mon-container"></div>
                     <div class="tag-partner hide">
-                        <legend align="center">Tag Partner</legend>
+                        <legend>Tag Partner</legend>
                         <div id="tag-partner" class="mon-container"></div>
                         <div id="ai-flags-partner" class="ai-flags-box hide"></div>
                     </div>
                     <hr />
                     <input class="teambox-searchbar" type="text" placeholder="Search...">
-                    <legend align="center">Box</legend>
+                    <legend>Box</legend>
                     <div id="box1" class="mon-container"></div>
-                    <legend align="center">Box 2</legend>
+                    <legend>Box 2</legend>
                     <div id="box2" class="mon-container"></div>
                     <hr />
-                    <legend align="center">Trash</legend>
+                    <legend>Trash</legend>
                     <div id="trash" class="mon-container"></div>
                     <hr />
                     <div style="text-align: center;">
@@ -698,7 +698,7 @@
         <div class="panel">
             <div aria-label="Field information" role="region">
                 <fieldset class="field-info">
-                    <legend align="center">Field</legend>
+                    <legend>Field</legend>
                     <div aria-labelledby="selectBattleFormatInstruction" class="gen-specific g3 g4 g5 g6 g7 g8 g9" role="radiogroup" style="width: 10.6em; margin: 0 auto 5px;" title="Select the battle format.">
                         <span class="visually-hidden" id="selectBattleFormatInstruction">Select the battle format.</span>
                         <input class="visually-hidden calc-trigger" type="radio" name="format" value="Singles" id="singles-format" />
@@ -882,7 +882,7 @@
             </div>
             <div aria-label="Import team" role="region">
                 <fieldset class="poke-import">
-                    <legend align="center">Import / Export</legend>
+                    <legend>Import / Export</legend>
                     <div id="import-1_wrapper" class="dataTables_wrapper no-footer">
                         <form class="import-team">
                             <textarea class="import-team-text"></textarea>
@@ -894,7 +894,7 @@
         </div>
         <div aria-label="Pok&eacute;mon 2" role="region" class="panel">
             <fieldset class="poke-info" id="p2">
-                <legend align="center">Pok&eacute;mon 2</legend>
+                <legend>Pok&eacute;mon 2</legend>
                 <input type="text" class="set-selector calc-trigger" />
                 <!-- <span id="importedSetsOptions" style="width:auto; display:none">
                     <input type="checkbox" id="importedSets" /> Only show imported sets <br />
@@ -1409,8 +1409,8 @@
             </fieldset>
             <div aria-label="Enemy" role="region">
                 <fieldset class="enemy">
-                    <legend align="center">Enemy</legend>
-                    <legend align="center">Team</legend>
+                    <legend>Enemy</legend>
+                    <legend>Team</legend>
                     <div id="enemy" class="mon-container"></div>
                     <div id="ai-flags-team" class="ai-flags-box hide"></div>
                     <div class="switch-in-toggle-area">
@@ -1421,10 +1421,10 @@
                             <span class="legend-item"><span class="legend-swatch swatch-switchin"></span> Switch-in</span>
                             <span class="legend-item"><span class="legend-swatch swatch-fainted"></span> Fainted</span>
                         </div>
-                        <div class="switch-in-note hide" id="switchInNote">If multiple Pokémon are highlighted, whichever one is earliest in the team order will be sent out first :)</div>
+                        <div class="switch-in-note hide" id="switchInNote">If multiple Pokémon are highlighted, whichever one is earliest (leftmost) in the team order will be sent out first</div>
                     </div>
                     <div class="enemy-tag hide">
-                        <legend align="center">Tag Partner</legend>
+                        <legend>Tag Partner</legend>
                         <div id="enemy-tag" class="mon-container"></div>
                         <div id="ai-flags-tag" class="ai-flags-box hide"></div>
                     </div>
@@ -1434,8 +1434,8 @@
                     <button id="reset-trainer">Reset</button>
                     <div class="switch-ai hide">
                         <hr />
-                        <legend align="center">Experience Dropped</legend>
-                        <!-- <legend align="center">Switch-In Guide</legend> -->
+                        <legend>Experience Dropped</legend>
+                        <!-- <legend>Switch-In Guide</legend> -->
                         <div class="switch-ai-container"></div>
                     </div>
                 </fieldset>
@@ -1511,7 +1511,7 @@
         <hr />
         <div class="dex-panel-wrapper">
             <fieldset class="search">
-                <legend align="center">Search</legend>
+                <legend>Search</legend>
                 <input class="visually-hidden" type="radio" name="filter" value="" id="all" checked="checked" /><label class="btn btn-smaller btn-left" for="all">All</label>
                 <input class="visually-hidden" type="radio" name="filter" value="species" id="species" /><label class="btn btn-mid" for="species">Pokémon</label>
                 <input class="visually-hidden" type="radio" name="filter" value="moves" id="moves" /><label class="btn btn-mid" for="moves">Moves</label>
@@ -1554,14 +1554,14 @@
         <div class="settings" aria-label="Settings" role="region"></div>
         <hr />
         <fieldset class="settings-container">
-            <p class="label" align="center">Gender</p>
+            <p class="label">Gender</p>
             <span class="genderSelection" aria-labelledby="selectGenderInstruction" role="radiogroup" title="Select your trainer gender.">
                 <span class="visually-hidden" id="selectGenderInstruction">Select your trainer gender.</span>
                 <input class="visually-hidden" type="radio" name="gender" value="Male" id="male" checked="checked" /><label class="btn btn-left" for="male">Male</label>
                 <input class="visually-hidden" type="radio" name="gender" value="Female" id="female" /><label class="btn btn-right" for="female">Female</label>
             </span>
             <hr />
-            <p class="label" align="center">Starter</p>
+            <p class="label">Starter</p>
             <span class="starterSelection" aria-labelledby="selectStarterInstruction" role="radiogroup" title="Select your starter Pokémon.">
                 <span class="visually-hidden" id="selectStarterInstruction">Select your starter Pokémon.</span>
                 <input class="visually-hidden" type="radio" name="starter" value="Turtwig" id="turtwig" checked="checked" /><label class="btn btn-wide btn-left" for="turtwig">Turtwig</label>
@@ -1569,14 +1569,14 @@
                 <input class="visually-hidden" type="radio" name="starter" value="Piplup" id="piplup" /><label class="btn btn-wide btn-right" for="piplup">Piplup</label>
             </span>
             <hr />
-            <p class="label" align="center">Theme</p>
+            <p class="label">Theme</p>
             <span class="themeSelection" aria-labelledby="selectThemeInstruction" role="radiogroup" title="Select the calculator theme.">
                 <span class="visually-hidden" id="selectThemeInstruction">Select the calculator theme.</span>
                 <input class="visually-hidden" type="radio" name="theme" value="Dark" id="dark" checked="checked" /><label class="btn btn-left" for="dark">Dark</label>
                 <input class="visually-hidden" type="radio" name="theme" value="Light" id="light" /><label class="btn btn-right" for="light">Light</label>
             </span>
             <hr />
-            <p class="label" align="center">QoL Features</p>
+            <p class="label">QoL Features</p>
             <!-- <span aria-labelledby="selectSwitchInInstruction" role="checkbox" title="Enable the Switch-In Guide?">
                 <div hidden id="selectSwitchInInstruction">Enable the Switch-In Guide?</div>
                 <input class="visually-hidden" type="checkbox" id="switchInGuide" checked="checked" />
@@ -1593,7 +1593,7 @@
                 <label class="btn btn-xxxwide btn-right" for="showAIFlags">AI Flags</label>
             </span>
             <hr />
-            <p class="label" align="center">Additional Dupes</p>
+            <p class="label">Additional Dupes</p>
             <textarea id="dupes" placeholder="Enter each Pokémon in a separate line..."></textarea>
         </fieldset>
     </div>
