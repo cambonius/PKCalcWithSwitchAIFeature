@@ -1,0 +1,96 @@
+PHASE 1
+
+First, it looks for a supereffective move (EVERY SINGLE MOVE, NOT JUST DAMAGING)
+
+If multiple of AIs pokemon have SE moves, it looks for AIs offensive type matchup. 
+The moves of the pokemon actually dont matter, as long as they are SE. AI only looks at the type of the pokemon itself to compare between what to send out.
+
+If there are no SE moves left on the AIs team, refer to Phase 2.
+
+
+In order to compare, the code will add both of the AIs types together to give it a score. The highest scoring mon will be sent out.
+quad = 4x
+SE = 2x
+neutral = 1x
+resist = .5x
+quad resist = .25x
+immune = 0x
+
+
+Single typed pokemon have their type counted twice - i.e. Vaporeon = (water / water) type
+
+
+EXAMPLE: USING A PLAYERS BASTIODON (assume all AI mons have SE moves)
+
+This is the order AIs pokemon would theoretically be sent out (all tiers)
+
+6x (quad + SE) POLIWRATH
+5x (quad + neutral) INFERNAPE / LUCARIO
+4.5x (quad + resist) GALLADE
+4.25x (quad + quad resist) FARFETCHD
+4x (SE + SE) LUMINEON {TIED WITH} (quad + immune) TOXICROAK
+3x (SE + neutral) LANTURN
+2.5x (SE + resist) STARMIE
+2.25x (SE + quad resist) PELIPPER
+2x (neutral + neutral) JOLTEON / CHARMANDER {TIED WITH} (supereffective + immune) TENTACREUL
+8x (quad + quad / TYPE CHART OVERFLOW) MACHAMP / HIPPOWDON
+1.5x (resist + neutral) MISMAGIUS
+1.25x (neutral + quad resist) ZAPDOS
+1x (immune + neutral) GENGAR {TIED WITH} (resist + resist) MR. MIME
+0.75x (resist + quad resist) XATU
+0.5x (immune + resist) ARIADOS {TIED WITH} (quad resist + quad resist) PIDGEOT
+0.25x (immune + quad resist) CROBAT
+0x (immune + immune) GULPIN
+
+Youll notice that 8x (quad + quad) type matchups are on the middle of the list. Logically one would assume that 8x should be maxinum priority, but because of a bug in the code, some sort of overflow occurs and 8x matchups come out in between 2x matchups and 1.5x matchups. Type chart overflow 5Head
+
+
+BUGGED
+Skarmory (Steel / FLYING) bugged: Sees ground as SE
+Aerodactyl (Rock / FLYING) bugged: Sees ground as SE
+Zapdos (Electric / FLYING) bugged: Sees ground as SE
+Zubat (Poison / FLYING) bugged: Sees ground as SE
+Golbat (Poison / FLYING) bugged: Sees ground as SE
+Crobat (Poison / FLYING) bugged: Sees ground as SE
+Moltres (Fire / FLYING) bugged: Sees ground as SE
+Ho-oh (Fire / FLYING) bugged: Sees ground as SE
+
+Barboach (water / GROUND) bugged: Sees electric as SE
+Wooper (water / GROUND) bugged: Sees electric as SE
+Gastrodon (water / GROUND) bugged: Sees electric as SE
+Swampert (water / GROUND) bugged: Sees electric as SE
+Whiscash (water / GROUND) bugged: Sees electric as SE
+Quagsire (water / GROUND) bugged: Sees electric as SE
+Marshstomp (water / GROUND) bugged: Sees electric as SE
+
+Altaria (dragon / FAIRY) bugged: Sees dragon as SE
+
+Mawile (STEEL / fairy) bugged: Sees poison moves as SE
+
+Girafarig (NORMAL / psychic) bugged: Sees ghost as SE
+
+
+NOT BUGGED
+Froslass (ice / GHOST) not bugged: Does not see fighting as SE
+
+Spiritomb (GHOST / dark) not bugged: Does not see fighting as SE
+Sableye (dark / GHOST) not bugged: Does not see fighting as SE
+
+Seviper (poison / DARK) Not bugged: Does not see psychic as SE
+Stunky (poison / DARK) Not bugged: Does not see psychic as SE
+Skuntank (poison / DARK): Not bugged: Does not see psychic as SE
+Drapion (poison / DARK): Not bugged: Does not see psychic as SE
+
+Gligar (GROUND / flying) not bugged: Does not see electric as SE
+Gliscor (GROUND / flying) not bugged: Does not see electric as SE
+
+AI CHEATS TO SEE LEVITATE IN PHASE 1
+
+
+PHASE 2
+
+If AI doesnt have any more SE moves, it will calculate the damage as if the dead pokemon used each of its teammates attacks (as if it called them from assist), and then pick the teammate whos move's max roll did the most damage to send out.
+
+If two different moves' max rolls from two different pokemon both kill your mon [AT FULL HP, STAT CHANGES INCLUDED AND ITEM OF DEAD MON INCLUDED] the pokemon will TIE, and it will go first in party order.
+
+If an attacks max roll does over 255hp of damage, the damage will overflow 5Head. Example: an attack that does 270 damage will actually calculate as (270 - 255 = 15 damage). 
