@@ -617,19 +617,19 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
 				}
 				var enemyTagParty = getTrainerPokemon(tagBattle.enemy2);
 				for (var i in enemyTagParty) {
 					var mon = enemyTagParty[i].substring(0, enemyTagParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyTagHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyTagParty[i]}" data-side="p2" title="${enemyTagParty[i]}">`;
+					enemyTagHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyTagParty[i]}" data-side="p2" title="${enemyTagParty[i]}">`;
 				}
 				var tagParty = getTrainerPokemon(tagBattle.partner);
 				for (var i in tagParty) {
 					var mon = tagParty[i].substring(0, tagParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					tagHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${tagParty[i]}" data-side="p1" title="${tagParty[i]}">`;
+					tagHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${tagParty[i]}" data-side="p1" title="${tagParty[i]}">`;
 				}
 			} else if (getDoubleBattle(CURRENT_TRAINER)) {
 				$("#doubles-format").prop("checked", true);
@@ -639,13 +639,13 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
 				}
 				var enemyTagParty = getTrainerPokemon(doubleBattle.enemy2);
 				for (var i in enemyTagParty) {
 					var mon = enemyTagParty[i].substring(0, enemyTagParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyTagHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyTagParty[i]}" data-side="p2" title="${enemyTagParty[i]}">`;
+					enemyTagHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyTagParty[i]}" data-side="p2" title="${enemyTagParty[i]}">`;
 				}
 			} else if (CURRENT_TRAINER in flags.battleType.trueDouble) {
 				$("#doubles-format").prop("checked", true);
@@ -653,7 +653,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
 				}
 			} else {
 				$("#singles-format").prop("checked", true);
@@ -661,7 +661,7 @@ $(".set-selector").change(function () {
 				for (var i in enemyParty) {
 					var mon = enemyParty[i].substring(0, enemyParty[i].indexOf(" ("));
 					var species = SPECIES[toID(mon)];
-					enemyHtml += `<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
+					enemyHtml += `<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${enemyParty[i]}" data-side="p2" title="${enemyParty[i]}">`;
 				}
 			}
 			enemyContainer.html(enemyHtml);
@@ -672,7 +672,7 @@ $(".set-selector").change(function () {
 			for (var i in currentTrainerParty) {
 				var mon = currentTrainerParty[i].substring(0, currentTrainerParty[i].indexOf(" ("));
 				var species = SPECIES[toID(mon)];
-				switchAIHtml += `<span class="switching-from" data-set="${currentTrainerParty[i]}"><img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" title="${currentTrainerParty[i]}"><span class="baiting"></span><span class="xp"></span></span>`;
+				switchAIHtml += `<span class="switching-from" data-set="${currentTrainerParty[i]}"><img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" title="${currentTrainerParty[i]}"><span class="baiting"></span><span class="xp"></span></span>`;
 			}
 			switchAIContainer.html(switchAIHtml);
 			$("#enemy .pokemon-icon, #enemy-tag .pokemon-icon, #tag-partner .pokemon-icon").on({

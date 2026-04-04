@@ -61,7 +61,7 @@ function reloadEncounters() {
 
             $(".encounter-list").append(
                 `<span class="encounter${set.dead ? " dead" : ""}" data-set-name="${i} (${j})">
-                    <img src="/img/dex/large/species/${species.id}.png" class="icon" data-target="species/${species.id}">
+                    <img src="./img/dex/large/species/${species.id}.png" class="icon" data-target="species/${species.id}">
                     <span class="info">
                         <span class="name-level">
                             <span class="name"><span class="species" data-target="species/${species.id}">${species.name}</span>${nickname ? `<span class="nickname"> (${nickname})</span>` : ``}</span>
@@ -72,19 +72,19 @@ function reloadEncounters() {
                             <span class="gender">${gender}</span>
                         </span>
                         <span class="stats">${!Object.values(evs).every(x => x == 0) ? "EVs: " + statsEV : ""}</span>
-                        <span class="item">${item ? `@ <span data-target="item/${item.id}"><img src="/img/dex/icon/items/${item.id}.png"> ${item.name}</span>` : ``}</span>
+                        <span class="item">${item ? `@ <span data-target="item/${item.id}"><img src="./img/dex/icon/items/${item.id}.png"> ${item.name}</span>` : ``}</span>
                         <span class="ability">Ability: <span data-target="ability/${ability.id}">${ability.name}</span></span>
                         <span class="location">${location ? `Met location: <span${location.id !== "linktrade" ? ` data-target="location/${location.id}"` : ""}>${location.name}</span>` : ""}</span>
                     </span>
                     <span class="moves">
                         <table>
                             <tr>
-                                <td>${moves[0] ? `<span data-target="move/${moves[0].id}"><img src=\"/img/dex/icon/types/${moves[0].type}.png\"> ${moves[0].name}</span>` : ``}</td>
-                                <td>${moves[1] ? `<span data-target="move/${moves[1].id}"><img src=\"/img/dex/icon/types/${moves[1].type}.png\"> ${moves[1].name}</span>` : ``}</td>
+                                <td>${moves[0] ? `<span data-target="move/${moves[0].id}"><img src=\"./img/dex/icon/types/${moves[0].type}.png\"> ${moves[0].name}</span>` : ``}</td>
+                                <td>${moves[1] ? `<span data-target="move/${moves[1].id}"><img src=\"./img/dex/icon/types/${moves[1].type}.png\"> ${moves[1].name}</span>` : ``}</td>
                             </tr>
                             <tr>
-                                <td>${moves[2] ? `<span data-target="move/${moves[2].id}"><img src=\"/img/dex/icon/types/${moves[2].type}.png\"> ${moves[2].name}</span>` : ``}</td>
-                                <td>${moves[3] ? `<span data-target="move/${moves[3].id}"><img src=\"/img/dex/icon/types/${moves[3].type}.png\"> ${moves[3].name}</span>` : ``}</td>
+                                <td>${moves[2] ? `<span data-target="move/${moves[2].id}"><img src=\"./img/dex/icon/types/${moves[2].type}.png\"> ${moves[2].name}</span>` : ``}</td>
+                                <td>${moves[3] ? `<span data-target="move/${moves[3].id}"><img src=\"./img/dex/icon/types/${moves[3].type}.png\"> ${moves[3].name}</span>` : ``}</td>
                             </tr>
                         </table>
                     </span>

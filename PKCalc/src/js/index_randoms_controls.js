@@ -54,10 +54,10 @@ function performCalculations() {
 		}
 	}
 
-	if (fastestSide == "tie") $(`.speed-info`).html(`<img src="/img/calc/icon/tie.png" title="Speed Tie">`);
+	if (fastestSide == "tie") $(`.speed-info`).html(`<img src="./img/calc/icon/tie.png" title="Speed Tie">`);
 	else {
-		$(`#p${fastestSide ? 2 : 1} .speed-info`).html(`<img src="/img/calc/icon/faster.png" title="Faster">`);
-		$(`#p${fastestSide ? 1 : 2} .speed-info`).html(`<img src="/img/calc/icon/slower.png" title="Slower">`);
+		$(`#p${fastestSide ? 2 : 1} .speed-info`).html(`<img src="./img/calc/icon/faster.png" title="Faster">`);
+		$(`#p${fastestSide ? 1 : 2} .speed-info`).html(`<img src="./img/calc/icon/slower.png" title="Slower">`);
 	}
 
 	var result, maxDamage;

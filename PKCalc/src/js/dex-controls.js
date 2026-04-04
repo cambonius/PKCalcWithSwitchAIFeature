@@ -23,21 +23,21 @@ function loadDexEntry(entryID) {
                 var first = species;
                 while (first.prevo) first = SPECIES[first.prevo];
                 var firstName = first.id == id ? `<b>${first.name}</b>` : first.name;
-                evos = `<td><span${first.id != id ? ` data-target="species/${first.id}"` : ``}><img src="/img/dex/icon/species/${first.id}.png">${firstName}</span></td>`;
+                evos = `<td><span${first.id != id ? ` data-target="species/${first.id}"` : ``}><img src="./img/dex/icon/species/${first.id}.png">${firstName}</span></td>`;
                 if (first.evos.length == 1) {
                     var second = SPECIES[first.evos[0].species];
                     var secondName = second.id == id ? `<b>${second.name}</b>` : second.name;
-                    evos += `<td class="arrow">→</td><td><span${second.id != id ? ` data-target="species/${second.id}"` : ``}><img src="/img/dex/icon/species/${second.id}.png">${secondName}</span></td>`;
+                    evos += `<td class="arrow">→</td><td><span${second.id != id ? ` data-target="species/${second.id}"` : ``}><img src="./img/dex/icon/species/${second.id}.png">${secondName}</span></td>`;
                     if (second.evos.length == 1) {
                         var third = SPECIES[second.evos[0].species];
                         var thirdName = third.id == id ? `<b>${third.name}</b>` : third.name;
-                        evos += `<td class="arrow">→</td><td><span${third.id != id ? ` data-target="species/${third.id}"` : ``}><img src="/img/dex/icon/species/${third.id}.png">${thirdName}</span></td>`;
+                        evos += `<td class="arrow">→</td><td><span${third.id != id ? ` data-target="species/${third.id}"` : ``}><img src="./img/dex/icon/species/${third.id}.png">${thirdName}</span></td>`;
                     } else if (second.evos.length > 1) {
                         var thirdA = SPECIES[second.evos[0].species];
                         var thirdAName = thirdA.id == id ? `<b>${thirdA.name}</b>` : thirdA.name;
                         var thirdB = SPECIES[second.evos[1].species];
                         var thirdBName = thirdB.id == id ? `<b>${thirdB.name}</b>` : thirdB.name;
-                        evos += `<td><span class="arrow">→</span><span class="arrow">→</span></td><td><span data-target="species/${thirdA.id}"><img src="/img/dex/icon/species/${thirdA.id}.png">${thirdAName}</span><span data-target="species/${thirdB.id}"><img src="/img/dex/icon/species/${thirdB.id}.png">${thirdBName}</span></td>`;
+                        evos += `<td><span class="arrow">→</span><span class="arrow">→</span></td><td><span data-target="species/${thirdA.id}"><img src="./img/dex/icon/species/${thirdA.id}.png">${thirdAName}</span><span data-target="species/${thirdB.id}"><img src="./img/dex/icon/species/${thirdB.id}.png">${thirdBName}</span></td>`;
                     }
                 } else {
                     var secondArrows = "<td>";
@@ -48,12 +48,12 @@ function loadDexEntry(entryID) {
                         var second = SPECIES[first.evos[i].species];
                         var secondName = second.id == id ? `<b>${second.name}</b>` : second.name;
                         secondArrows += `<span class="arrow">→</span>`;
-                        secondHTML += `<span${second.id != id ? ` data-target="species/${second.id}"` : ``}><img src="/img/dex/icon/species/${second.id}.png">${secondName}</span>`;
+                        secondHTML += `<span${second.id != id ? ` data-target="species/${second.id}"` : ``}><img src="./img/dex/icon/species/${second.id}.png">${secondName}</span>`;
                         if (second.evos.length) {
                             var third = SPECIES[second.evos[0].species];
                             var thirdName = third.id == id ? `<b>${third.name}</b>` : third.name;
                             thirdArrows += `<span class="arrow">→</span>`;
-                            thirdHTML += `<span${third.id != id ? ` data-target="species/${third.id}"` : ``}><img src="/img/dex/icon/species/${third.id}.png">${thirdName}</span>`;
+                            thirdHTML += `<span${third.id != id ? ` data-target="species/${third.id}"` : ``}><img src="./img/dex/icon/species/${third.id}.png">${thirdName}</span>`;
                         }
                     }
                     secondArrows += "</td>";
@@ -153,7 +153,7 @@ function loadDexEntry(entryID) {
             var formes = "";
             var baseSpecies = species.baseSpecies ? SPECIES[species.baseSpecies] : species;
             if (baseSpecies.formes.length) {
-                formes = baseSpecies.formes.map(x => `<span class="forme" data-target="species/${x}"><img src="/img/dex/icon/species/${x}.png">${x == species.id ? `<b>${SPECIES[x].name}</b>` : SPECIES[x].name}</span>`).join("");
+                formes = baseSpecies.formes.map(x => `<span class="forme" data-target="species/${x}"><img src="./img/dex/icon/species/${x}.png">${x == species.id ? `<b>${SPECIES[x].name}</b>` : SPECIES[x].name}</span>`).join("");
             }
             var html = `
             <div class="info">
@@ -164,7 +164,7 @@ function loadDexEntry(entryID) {
                 <span class="genderRatio">Gender: ${species.genderRatio}</span>
                 <span class="catchRate">Catch Rate: ${species.catchRate}<!--<br /><span class="catchRate-hint">(${Math.round(species.catchRate / 3 * 10) / 10}% with a <span data-target="item/pokeball">Poké Ball</span> at full HP)</span>--></span>
                 <span class="weight">Weight: ${species.weight.toFixed(1)} lbs</span>
-                ${Object.keys(species.heldItems).length ? `<span class="heldItems">Held Items: ${heldItems.map(x => `<span class="heldItem"><span class="itemName" data-target="item/${x.item.id}"><img src="/img/dex/icon/items/${x.item.id}.png">${x.item.name}</span><span class="itemChance"> (${x.chance}%)</span></span>`).join("")}</span>` : ``}
+                ${Object.keys(species.heldItems).length ? `<span class="heldItems">Held Items: ${heldItems.map(x => `<span class="heldItem"><span class="itemName" data-target="item/${x.item.id}"><img src="./img/dex/icon/items/${x.item.id}.png">${x.item.name}</span><span class="itemChance"> (${x.chance}%)</span></span>`).join("")}</span>` : ``}
                 <span class="evos"><table class="evos-table"><tbody><tr>${evos}</tr></tbody></table><span class="evo-method">${evoMethod}</span></span>
                 <span class="stats">
                     Base stats: ${statTable}
@@ -200,11 +200,11 @@ function loadDexEntry(entryID) {
                             break;
                         case "tm":
                             var machine = ITEMS[move.machine > 0 ? `tm${String(move.machine).padStart(2, "0")}` : `hm${String(-move.machine).padStart(2, "0")}`];
-                            var data = `<img src="/img/dex/icon/items/${machine.id}.png">`;
+                            var data = `<img src="./img/dex/icon/items/${machine.id}.png">`;
                             var method = "TM/HM";
                             break;
                         case "tutor":
-                            var data = `<img src="/img/dex/icon/other/tutor.png">`;
+                            var data = `<img src="./img/dex/icon/other/tutor.png">`;
                             var method = "Move tutor";
                             break;
                     }
@@ -214,8 +214,8 @@ function loadDexEntry(entryID) {
                         <li class="species-learnset" data-target="move/${move.id}">
                             <span class="data">${data}</span>
                             <span class="name">${move.shortName}</span>
-                            <span class="type"><img src="/img/dex/icon/types/${move.type}.png"></span>
-                            <span class="category"><img src="/img/dex/icon/other/${move.category}.png"></span>
+                            <span class="type"><img src="./img/dex/icon/types/${move.type}.png"></span>
+                            <span class="category"><img src="./img/dex/icon/other/${move.category}.png"></span>
                             <span class="basePower">${move.basePower > 1 ? move.basePower : "-"}</span>
                             <span class="accuracy">${move.accuracy > 0 ? `${move.accuracy}%` : "-"}</span>
                             <span class="powerPoints">${move.pp}<br />PP</span>
@@ -288,7 +288,7 @@ function loadDexEntry(entryID) {
                                 <span class="data">${data}</span>
                                 <span class="name">${location.name}</span>
                                 <span class="level">${level}</span>
-                                <span class="method" title="${method.name}${fullMethod.split("-").length > 1 ? ` [${fullMethod.split("-").slice(1).join(", ")}]` : ""}"><img src="/img/dex/icon/other/${method.id}.png"></span>
+                                <span class="method" title="${method.name}${fullMethod.split("-").length > 1 ? ` [${fullMethod.split("-").slice(1).join(", ")}]` : ""}"><img src="./img/dex/icon/other/${method.id}.png"></span>
                             </li>`);
                     }
                 }
@@ -324,7 +324,7 @@ function loadDexEntry(entryID) {
                 <span class="powerPoints">PP: ${move.pp}</span>
                 ${move.priority ? `<span class="priority">Priority: ${move.priority > 0 ? "+" : ""}${move.priority}</span>` : ""}
                 <span class="description">${move.effect}</span>
-                ${move.machine ? `<span class="machine">Machine: <span data-target="item/${machine.id}"><img src="/img/dex/icon/items/${machine.id}.png">${machine.name}</span></span>` : ""}
+                ${move.machine ? `<span class="machine">Machine: <span data-target="item/${machine.id}"><img src="./img/dex/icon/items/${machine.id}.png">${machine.name}</span></span>` : ""}
                 ${move.tutor ? `<span class="tutor">Tutor location: <span data-target="location/${tutorLocation}">${tutorLocation}</span></span>` : ""}
                 <span class="flags">
                     ${move.flags.includes("Contact") ? `<span class="contact">This move makes contact with the target.</span>` : ""}
@@ -358,18 +358,18 @@ function loadDexEntry(entryID) {
                                 levelLearnset.push({level: learnset.level, html: `
                                     <li class="move-learnset" data-target="species/${species.id}">
                                         <span class="data">${data}</span>
-                                        <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                                        <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                                         <span class="name">${species.name}</span>
                                         <span class="method">${method}</span>
                                     </li>`});
                                 break;
                             case "tm":
-                                data = `<img src="/img/dex/icon/items/${machine.id}.png">`;
+                                data = `<img src="./img/dex/icon/items/${machine.id}.png">`;
                                 method = machine.name;
                                 tmLearnset.push({html: `
                                     <li class="move-learnset" data-target="species/${species.id}">
                                         <span class="data">${data}</span>
-                                        <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                                        <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                                         <span class="name">${species.name}</span>
                                         <span class="method">${method}</span>
                                     </li>`});
@@ -380,7 +380,7 @@ function loadDexEntry(entryID) {
                                 tutorLearnset.push({html: `
                                     <li class="move-learnset" data-target="species/${species.id}">
                                         <span class="data">${data}</span>
-                                        <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                                        <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                                         <span class="name">${species.name}</span>
                                         <span class="method">${method}</span>
                                     </li>`});
@@ -485,10 +485,10 @@ function loadDexEntry(entryID) {
                         $(".dex-info .results").append(`
                             <li class="location-species${dupe ? " dupe" : ""}" data-target="${target}"${encounter.time ? ` data-encounter-time="${encounter.time}"` : ``}>
                                 <span class="data" style="${dangerStyle}" title="${danger.join(", ")}">${data}</span>
-                                <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                                <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                                 <span class="name">${species.name}</span>
                                 <span class="level">${level}</span>
-                                <span class="method" title="${ENCOUNTER_METHODS[encounter.method].name}"><img src="/img/dex/icon/other/${encounter.method}.png"></span>
+                                <span class="method" title="${ENCOUNTER_METHODS[encounter.method].name}"><img src="./img/dex/icon/other/${encounter.method}.png"></span>
                             </li>`);
                             $(`[data-encounter-time="day"], [data-encounter-time="night"]`).hide();
                     }
@@ -576,9 +576,9 @@ function loadDexEntry(entryID) {
                     $(".dex-info .results").append(`
                         <li class="item-heldby" data-target="species/${species.id}">
                             <span class="data">${species.heldItems[item.id]}%</span>
-                            <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                            <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                             <span class="name">${species.name}</span>
-                            <span class="types">${species.types.map(x => `<img src="/img/dex/icon/types/${x}.png">`).join("")}</span>
+                            <span class="types">${species.types.map(x => `<img src="./img/dex/icon/types/${x}.png">`).join("")}</span>
                         </li>`);
                 }
             }
@@ -627,9 +627,9 @@ function loadDexEntry(entryID) {
                     $(".dex-info .results").append(`
                         <li class="ability-pokemon" data-target="species/${species.id}">
                             <span class="data">${species.abilities.indexOf(ability.id) + 1}</span>
-                            <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                            <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                             <span class="name">${species.name}</span>
-                            <span class="types">${species.types.map(x => `<img src="/img/dex/icon/types/${x}.png">`).join("")}</span>
+                            <span class="types">${species.types.map(x => `<img src="./img/dex/icon/types/${x}.png">`).join("")}</span>
                         </li>`);
                 }
             }
@@ -644,10 +644,10 @@ function loadDexEntry(entryID) {
             var html = `
             <div class="info">
                 <span class="name">${type.name} Type</span>
-                <span class="type-icon"><img src="/img/dex/large/types/${type.id}.png"></span>
-                <span class="weak">Weaknesses: ${type.weak.map(t => `<span data-target="type/${TYPES[t].id}"><img src="/img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
-                <span class="resist">Resistances: ${type.resist.map(t => `<span data-target="type/${TYPES[t].id}"><img src="/img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
-                <span class="immune">Immunities: ${type.immune.map(t => `<span data-target="type/${TYPES[t].id}"><img src="/img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
+                <span class="type-icon"><img src="./img/dex/large/types/${type.id}.png"></span>
+                <span class="weak">Weaknesses: ${type.weak.map(t => `<span data-target="type/${TYPES[t].id}"><img src="./img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
+                <span class="resist">Resistances: ${type.resist.map(t => `<span data-target="type/${TYPES[t].id}"><img src="./img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
+                <span class="immune">Immunities: ${type.immune.map(t => `<span data-target="type/${TYPES[t].id}"><img src="./img/dex/icon/types/${TYPES[t].id}.png"></span>`).join(" ") || `<i>None</i>`}</span>
             </div>
             <div class="list">
                 <ul class="list-nav">
@@ -670,9 +670,9 @@ function loadDexEntry(entryID) {
                     $(".dex-info .results").append(`
                         <li class="type-pokemon" data-target="species/${species.id}">
                             <span class="data">${species.types.indexOf(type.id) + 1}</span>
-                            <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                            <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                             <span class="name">${species.name}</span>
-                            <span class="types">${species.types.map(x => `<img src="/img/dex/icon/types/${x}.png">`).join("")}</span>
+                            <span class="types">${species.types.map(x => `<img src="./img/dex/icon/types/${x}.png">`).join("")}</span>
                         </li>`);
                 }
             }
@@ -684,8 +684,8 @@ function loadDexEntry(entryID) {
                     $(".dex-info .results").append(`
                         <li class="type-move" data-target="move/${move.id}">
                             <span class="name">${move.shortName}</span>
-                            <span class="type"><img src="/img/dex/icon/types/${move.type}.png"></span>
-                            <span class="category"><img src="/img/dex/icon/other/${move.category}.png"></span>
+                            <span class="type"><img src="./img/dex/icon/types/${move.type}.png"></span>
+                            <span class="category"><img src="./img/dex/icon/other/${move.category}.png"></span>
                             <span class="basePower">${move.basePower > 1 ? move.basePower : "-"}</span>
                             <span class="accuracy">${move.accuracy > 0 ? `${move.accuracy}%` : "-"}</span>
                             <span class="powerPoints">${move.pp}<br />PP</span>
@@ -714,7 +714,7 @@ function loadDexEntry(entryID) {
             var html = `
             <div class="info">
                 <span class="name">${category.name} Moves</span>
-                <span class="category-icon"><img src="/img/dex/large/other/${category.id}.png"></span>
+                <span class="category-icon"><img src="./img/dex/large/other/${category.id}.png"></span>
             </div>
             <div class="list">
                 <ul class="list-nav">
@@ -733,8 +733,8 @@ function loadDexEntry(entryID) {
                     $(".dex-info .results").append(`
                         <li class="category-move" data-target="move/${move.id}">
                             <span class="name">${move.shortName}</span>
-                            <span class="type"><img src="/img/dex/icon/types/${move.type}.png"></span>
-                            <span class="category"><img src="/img/dex/icon/other/${move.category}.png"></span>
+                            <span class="type"><img src="./img/dex/icon/types/${move.type}.png"></span>
+                            <span class="category"><img src="./img/dex/icon/other/${move.category}.png"></span>
                             <span class="basePower">${move.basePower > 1 ? move.basePower : "-"}</span>
                             <span class="accuracy">${move.accuracy > 0 ? `${move.accuracy}%` : "-"}</span>
                             <span class="powerPoints">${move.pp}<br />PP</span>
@@ -805,9 +805,9 @@ function search(term) {
                 var species = SPECIES[id];
                 if (species.id.includes(term)) results.append(`
                     <li class="species" data-target="species/${species.id}">
-                        <span class="icon"><img src="/img/dex/icon/species/${species.id}.png"></span>
+                        <span class="icon"><img src="./img/dex/icon/species/${species.id}.png"></span>
                         <span class="name">${species.name}</span>
-                        <span class="types">${species.types.map(x => `<img src="/img/dex/icon/types/${x}.png">`).join("")}</span>
+                        <span class="types">${species.types.map(x => `<img src="./img/dex/icon/types/${x}.png">`).join("")}</span>
                     </li>`);
                 break;
             case "move":
@@ -815,8 +815,8 @@ function search(term) {
                 if (move.id.includes(term)) results.append(`
                     <li class="move" data-target="move/${move.id}">
                         <span class="name">${move.shortName}</span>
-                        <span class="type"><img src="/img/dex/icon/types/${move.type}.png"></span>
-                        <span class="category"><img src="/img/dex/icon/other/${move.category}.png"></span>
+                        <span class="type"><img src="./img/dex/icon/types/${move.type}.png"></span>
+                        <span class="category"><img src="./img/dex/icon/other/${move.category}.png"></span>
                         <span class="basePower">${move.basePower > 1 ? move.basePower : "-"}</span>
                         <span class="accuracy">${move.accuracy > 0 ? `${move.accuracy}%` : "-"}</span>
                         <span class="powerPoints">${move.pp}<br />PP</span>
@@ -835,7 +835,7 @@ function search(term) {
                 var item = ITEMS[id];
                 if (item.id.includes(term)) results.append(`
                     <li class="item" data-target="item/${item.id}">
-                        <span class="icon"><img src="/img/dex/icon/items/${item.id}.png"></span>
+                        <span class="icon"><img src="./img/dex/icon/items/${item.id}.png"></span>
                         <span class="name">${item.name}</span>
                     </li>`);
                 break;

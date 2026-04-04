@@ -19,7 +19,7 @@
         height: 768px;
         margin: 16px;
         border-radius: 10px;
-        background-image: url("/img/map/map.png");
+        background-image: url("../img/map/map.png");
 
         .cursor {
             position: relative;

@@ -427,7 +427,7 @@ function addToBox(poke) {
 	var set = `${poke.name} (${poke.nameProp})`;
 	var species = SPECIES[toID(poke.name)];
 	if (!$(`[data-set="${set}"]`).length) {
-		$("#box1").append(`<img class="pokemon-icon" src="/img/dex/icon/species/${species.id}.png" data-set="${set}" data-side="p1" title="${set}">`);
+		$("#box1").append(`<img class="pokemon-icon" src="./img/dex/icon/species/${species.id}.png" data-set="${set}" data-side="p1" title="${set}">`);
 		$(`[data-set="${set}"]`).on({
 			click: function() {
 				loadSet($(this).attr("data-set"), $(this).attr("data-side"));

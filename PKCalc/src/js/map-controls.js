@@ -11,7 +11,7 @@ function refreshMapDupes() {
             var [x, y] = location.coords[j];
             var x_offset = (markers % 32) * 24;
             var y_offset = Math.floor(markers / 32) * 24;
-            $(".dupe-overlay").append(`<img src="/img/map/cross.png" class="dupe-marker" style="top: ${(y + 5) * 24 - y_offset}px; left: ${x * 24 - x_offset}px">`);
+            $(".dupe-overlay").append(`<img src="./img/map/cross.png" class="dupe-marker" style="top: ${(y + 5) * 24 - y_offset}px; left: ${x * 24 - x_offset}px">`);
             markers += 1;
         }
     }
