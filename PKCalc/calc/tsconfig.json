@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "dist",
-    "target": "es6",
+    "target": "es5",
+    "downlevelIteration": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
   "exclude": [
