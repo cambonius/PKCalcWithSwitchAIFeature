@@ -1482,7 +1482,26 @@
         <script type="text/javascript" src="./calc/calc.js?"></script>
         <script type="text/javascript" src="./calc/desc.js?"></script>
         <script type="text/javascript" src="./calc/result.js?"></script>
-        <script type="text/javascript" src="./calc/index.js?"></script>
+        <script type="text/javascript">
+            // index.js uses Object.defineProperty getters for re-exports which
+            // cause infinite recursion when all scripts share a single exports
+            // object. Instead, we inline the two functions it adds (calculate
+            // wrapper + calcStat) and wire up calc as the global namespace.
+            var _origCalculate = exports.calculate;
+            exports.calculate = function(gen, attacker, defender, move, field) {
+                return _origCalculate(
+                    typeof gen === 'number' ? exports.Generations.get(gen) : gen,
+                    attacker, defender, move, field
+                );
+            };
+            exports.calcStat = function(gen, stat, base, iv, ev, level, nature) {
+                return exports.Stats.calcStat(
+                    typeof gen === 'number' ? exports.Generations.get(gen) : gen,
+                    stat === 'spc' ? 'spa' : stat, base, iv, ev, level, nature
+                );
+            };
+            var calc = exports;
+        </script>
         <script type="text/javascript" src="./js/settings-controls.js?"></script>
         <script type="text/javascript" src="./js/link-controls.js?"></script>
         <script type="text/javascript" src="./js/shared_controls.js?"></script>
