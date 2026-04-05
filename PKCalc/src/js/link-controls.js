@@ -10,9 +10,9 @@ $(".tab").on({
 CURRENT_TAB = "calc";
 function changeTab(tab) {
     if (tab == CURRENT_TAB) return;
-	$(".wrapper").hide();
+	$(".wrapper").addClass("hide");
     if (!["calc", "dex", "box", "map", "settings"].includes(tab)) tab = "calc";
-    $(`#${tab}-wrapper`).show();
+    $(`#${tab}-wrapper`).removeClass("hide");
     $(".tabSelection").detach().appendTo(`#${tab}-wrapper .settings`);
     $(`#${tab}:radio[name='tab']`).prop("checked", true).change();
     if (tab == "dex") $(".dex-searchbar").val("").trigger("input").select();

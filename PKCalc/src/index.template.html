@@ -53,9 +53,9 @@
             <span class="tabSelection" aria-labelledby="tabSelectionInstruction" role="radiogroup" title="Select the current tab.">
                 <span class="visually-hidden" id="tabSelectionInstruction">Select the current tab.</span>
                 <input class="tab visually-hidden" type="radio" name="tab" id="calc" value="calc" checked="checked" /><label class="btn btn-wide btn-left" for="calc">Calculator</label>
-                <input class="tab visually-hidden" type="radio" name="tab" id="dex" value="dex" /><label class="btn btn-mid" for="dex">Pok&eacute;dex</label>
-                <input class="tab visually-hidden" type="radio" name="tab" id="box" value="box" /><label class="btn btn-small btn-mid" for="box">Box</label>
-                <input class="tab visually-hidden" type="radio" name="tab" id="map" value="map" /><label class="btn btn-small btn-mid" for="map">Map</label>
+                <span class="hide"><input class="tab visually-hidden" type="radio" name="tab" id="dex" value="dex" /><label class="btn btn-mid" for="dex">Pok&eacute;dex</label></span>
+                <span class="hide"><input class="tab visually-hidden" type="radio" name="tab" id="box" value="box" /><label class="btn btn-small btn-mid" for="box">Box</label></span>
+                <span class="hide"><input class="tab visually-hidden" type="radio" name="tab" id="map" value="map" /><label class="btn btn-small btn-mid" for="map">Map</label></span>
                 <input class="tab visually-hidden" type="radio" name="tab" id="settings" value="settings" /><label class="btn btn-right" for="settings">Settings</label>
             </span>
         </div>
@@ -131,7 +131,7 @@
                     <input type="checkbox" id="importedSets" /> Only show imported sets <br />
                 </span> -->
                 <div class="info-group top">
-                    <div class="dex-entry">
+                    <div class="dex-entry hide">
                         <button class="openDexEntry">Open in Pokédex</button>
                     </div>
                     <div>
@@ -900,7 +900,7 @@
                     <input type="checkbox" id="importedSets" /> Only show imported sets <br />
                 </span> -->
                 <div class="info-group top">
-                    <div class="dex-entry">
+                    <div class="dex-entry hide">
                         <button class="openDexEntry">Open in Pokédex</button>
                     </div>
                     <div>
