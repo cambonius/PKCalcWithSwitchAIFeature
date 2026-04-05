@@ -2031,8 +2031,13 @@ function calcPhase2AllDamage(deadMon, partyData, playerPokemon, lastTypeScore) {
 				var moveName = movesArr[m];
 				var moveData = moves[moveName];
 
-				// Check basePower to determine how to handle the move
-				var bp = moveData ? moveData.basePower : 0;
+				// Look up basePower from the custom dex data (MOVES), which matches
+				// the game ROM's power values: Counter/Mirror Coat = 1, status = 0.
+				// The calc library's moveData.bp uses 0 for variable-power moves,
+				// which would incorrectly treat them as status moves.
+				var moveId = moveName.toLowerCase().replace(/[^a-z0-9]/g, '');
+				var dexMove = (typeof MOVES !== 'undefined') ? MOVES[moveId] : null;
+				var bp = dexMove ? dexMove.basePower : (moveData ? (moveData.bp || 0) : 0);
 
 				if (bp === 0) {
 					// Status move (bp:0): damage = 0, update accumulator
@@ -2196,13 +2201,39 @@ function getSwitchInPredictions(playerSetName) {
 	}
 
 	// PHASE 2: No SE moves — calculate damage using dead mon's stats with teammates' moves.
-	// The carry-over bug: the accumulator starts at the LAST party member's type score.
+	// The carry-over bug: the accumulator starts at the score variable's value after Stage 1.
+	// In the game, Stage 1 processes mons from highest type score to lowest in a while-loop,
+	// and the score variable retains the type score of the last valid mon evaluated in the
+	// for-loop of the last productive while-loop iteration.
 	try {
 		var playerMon = createPokemon($("#p1"));
 		var deadMon = createPokemon($("#p2")); // The currently selected (dead) enemy mon
 
-		// Get the last party member's type score for carry-over bug initialization
-		var lastTypeScore = partyData[partyData.length - 1].typeScore;
+		// Simulate Stage 1's while-loop to determine the correct carry-over value.
+		// The game's score variable is set for each valid mon in the for-loop,
+		// and retains the value of the LAST valid mon by party index in each iteration.
+		var lastTypeScore = 0;
+		var disregarded = {};
+		var allDisregarded = false;
+		while (!allDisregarded) {
+			var iterMaxScore = 0;
+			var iterPicked = -1;
+			var iterLastScore = lastTypeScore;
+			for (var i = 0; i < partyData.length; i++) {
+				if (disregarded[i]) continue;
+				iterLastScore = partyData[i].typeScore;
+				if (iterMaxScore < partyData[i].typeScore) {
+					iterMaxScore = partyData[i].typeScore;
+					iterPicked = i;
+				}
+			}
+			lastTypeScore = iterLastScore;
+			if (iterPicked !== -1) {
+				disregarded[iterPicked] = true;
+			} else {
+				allDisregarded = true;
+			}
+		}
 
 		// Calculate all damage with carry-over (modifies partyData[i].score in place)
 		calcPhase2AllDamage(deadMon, partyData, playerMon, lastTypeScore);
@@ -2233,6 +2264,8 @@ function getSwitchInPredictions(playerSetName) {
 function applySwitchInBorders() {
 	// Remove all existing switch-in highlights
 	$(".pokemon-icon").removeClass("switch-in-highlight");
+	// Clear move prediction
+	$("#aiMovePrediction").addClass("hide").empty();
 
 	if (!$("#switchInBorders").prop("checked")) {
 		$("#switchInLegend, #switchInNote").addClass("hide");
@@ -2262,6 +2295,131 @@ function applySwitchInBorders() {
 	// Apply highlights to matching enemy icons (use wrapper's data-set)
 	for (var i = 0; i < predictions.length; i++) {
 		$(`.enemy .pokemon-icon-wrapper[data-set="${predictions[i]}"] .pokemon-icon`).addClass("switch-in-highlight");
+	}
+
+	// AI Move Prediction: predict what move the switch-in will use
+	if (typeof predictAIMove === "function" && typeof CURRENT_TRAINER !== "undefined" && CURRENT_TRAINER) {
+		try {
+			showAIMovePrediction(predictions, playerSetName);
+		} catch (e) {
+			// Silently fail — prediction is a nice-to-have
+		}
+	}
+}
+
+/**
+ * Show AI move prediction for each predicted switch-in.
+ * Creates calc.Pokemon objects for the switch-in and player's mon,
+ * runs move scoring, and displays the result.
+ */
+function showAIMovePrediction(switchInSetNames, playerSetName) {
+	var trainerName = sanitizeTrainerName(CURRENT_TRAINER);
+	var trainerFlags = (typeof aiFlags !== "undefined") && aiFlags && aiFlags[trainerName];
+	if (!trainerFlags) return;
+
+	// Create player's Pokémon for damage calculation context
+	var playerPokemon;
+	try {
+		playerPokemon = createPokemon($("#p1"));
+	} catch (e) {
+		return;
+	}
+	if (!playerPokemon) return;
+
+	// Build field object (for weather, terrain, etc.)
+	var fieldObj = null;
+	try {
+		var weather = $("input:radio[name='weather']:checked").val() || "None";
+		fieldObj = new calc.Field({
+			weather: weather === "None" ? "" : weather,
+			isGravity: $("#gravity").is(":checked"),
+			terrain: ""
+		});
+	} catch (e) {}
+
+	// Determine weather string for context
+	var weatherStr = null;
+	var weatherRadio = $("input:radio[name='weather']:checked").val();
+	if (weatherRadio === "Sand") weatherStr = "Sand";
+	else if (weatherRadio === "Sun") weatherStr = "Sun";
+	else if (weatherRadio === "Rain") weatherStr = "Rain";
+	else if (weatherRadio === "Hail") weatherStr = "Hail";
+
+	var predHtml = '<div class="pred-header">AI Move Prediction</div>';
+	var hasPrediction = false;
+
+	for (var pi = 0; pi < switchInSetNames.length; pi++) {
+		var setName = switchInSetNames[pi];
+
+		// Extract species and trainer from setName format: "Species (Trainer)"
+		var speciesName = setName.substring(0, setName.indexOf(" ("));
+		var trainerInSet = setName.substring(setName.indexOf("(") + 1, setName.lastIndexOf(")"));
+		var set = setdex[speciesName] && setdex[speciesName][trainerInSet];
+		if (!set || !set.moves) continue;
+
+		// Create calc.Pokemon for the switch-in
+		var switchInPokemon;
+		try {
+			switchInPokemon = createPokemon(setName);
+		} catch (e) {
+			continue;
+		}
+		if (!switchInPokemon) continue;
+
+		// Determine context
+		var isDoubles = !!getTagBattle(CURRENT_TRAINER) || !!getDoubleBattle(CURRENT_TRAINER) ||
+			(CURRENT_TRAINER in flags.battleType.trueDouble);
+
+		var extraContext = {
+			isFirstTurn: true, // Switch-in's first turn in battle
+			isDoubles: isDoubles,
+			attackerIsLast: false,
+			defenderIsLast: false,
+			weather: weatherStr,
+			attackerHPPercent: 100 // Fresh switch-in is at full HP
+		};
+
+		var prediction = predictAIMove(switchInPokemon, playerPokemon, trainerFlags, fieldObj, extraContext);
+		if (!prediction || !prediction.allMoves || prediction.allMoves.length === 0) continue;
+
+		hasPrediction = true;
+
+		// Build display for this Pokémon
+		predHtml += '<div class="pred-mon-block">';
+		predHtml += '<span class="pred-mon">' + speciesName + '</span> → ';
+		predHtml += '<span class="pred-move">' + prediction.bestMove + '</span>';
+		predHtml += ' <span class="pred-score">(score: ' + prediction.bestScore + ')</span>';
+
+		// Show all moves with scores + breakdown
+		predHtml += '<div class="pred-moves-list">';
+		for (var mi = 0; mi < prediction.allMoves.length; mi++) {
+			var m = prediction.allMoves[mi];
+			if (!m.move || m.move === "(No Move)") continue;
+
+			var isBest = (mi === 0);
+			var barWidth = Math.max(2, Math.min(80, (m.score - 80) * 4)); // Visual bar scaled
+			predHtml += '<div class="pred-move-item' + (isBest ? ' pred-best' : '') + '">';
+			predHtml += '<span class="score-bar" style="width: ' + barWidth + 'px"></span> ';
+			predHtml += '<span>' + m.move + '</span>';
+			predHtml += ' <span class="pred-score">' + m.score + '</span>';
+
+			// Show flag breakdown
+			var breakdownParts = [];
+			for (var flagName in m.breakdown) {
+				var val = m.breakdown[flagName];
+				breakdownParts.push(flagName + ': ' + (val > 0 ? '+' : '') + val);
+			}
+			if (breakdownParts.length > 0) {
+				predHtml += ' <span class="pred-breakdown">(' + breakdownParts.join(', ') + ')</span>';
+			}
+
+			predHtml += '</div>';
+		}
+		predHtml += '</div></div>';
+	}
+
+	if (hasPrediction) {
+		$("#aiMovePrediction").html(predHtml).removeClass("hide");
 	}
 }
 
@@ -2392,6 +2550,24 @@ function updateAIFlags(trainer, tagBattle, doubleBattle) {
 	}
 }
 
+/**
+ * Detailed tooltips for each AI flag, derived from the Gen 4 Trainer AI guide.
+ * Each tooltip explains the flag's philosophy and key behaviors.
+ */
+var AI_FLAG_TOOLTIPS = {
+	Basic: "Discourage wasted turns & moves that benefit the opponent.\n• -10 for type/ability immunities (note: Dry Skin bug — not checked)\n• -10 for status moves on already-statused targets\n• -10 for setting hazards when target is last mon\n• -8 for recovery at full HP, duplicate screens/safeguard\n• -10 for boosting a stat already at +6\n• Checks Thunder Wave vs Ground, Mold Breaker vs abilities, etc.\n• Will NEVER target partner with single-target moves.",
+	EvaluateAttack: "Prioritize raw damage output over all other outcomes.\n• +4 to +6 if a move's max damage KOs (higher for priority moves)\n• -1 if a move isn't the highest overall damage option\n• ~80% chance of -2 for Self-Destruct/Focus Punch/Sucker Punch\n• 31.25% chance of +2 if move is quad-effective\n• Will NEVER target partner.",
+	Expert: "Advanced move effect scoring in specific circumstances.\n• Sleep inducers: +1 if user knows Dream Eater/Nightmare\n• Paralysis: +3 if slower than target (92.2% chance)\n• Confusion: scaled penalties at lower target HP\n• Self-Destruct/Memento: scored based on user HP %\n• Stat boosters: penalties at low HP, bonuses at full HP\n• Recovery: strong bonus if opponent lacks Snatch, penalty if faster\n• Protect: bonus if opponent is Toxic'd/Cursed/Seeded\n• Weather/Trick Room/Screens: nuanced HP/speed checks\n• U-turn: complex logic based on party damage comparison.",
+	Setup: "On the FIRST turn of the entire battle, prioritize setup moves.\n• 68.75% chance of +2 for:\n  - Stat boosting/dropping moves\n  - Conversion, Reflect, Light Screen\n  - Status-inducing moves\n  - Leech Seed, Substitute, Minimize\n  - Tailwind, Magnet Rise, Ingrain, etc.",
+	Risky: "Prioritize high-risk, high-reward moves.\n• 50% chance of +2 for:\n  - Sleep moves, Self-Destruct/Explosion\n  - OHKO moves, high crit-rate moves\n  - Confusion moves, Metronome, Psywave\n  - Counter/Mirror Coat/Metal Burst\n  - Destiny Bond, Swagger, Belly Drum\n  - Focus Punch, Sucker Punch, Payback\n  - Acupressure, Me First",
+	DamagePriority: "Prioritize variable power, flat damage, high BP, or zero BP moves.\n• ~61% chance of +2 for moves not considered by damage calc:\n  - Self-Destruct/Explosion, Dream Eater\n  - Charge turn moves, recharge moves\n  - Level-based damage, friendship-based, flat damage\n  - Focus Punch, Superpower, Sucker Punch\n  - Hidden Power, Natural Gift, Judgment, Psywave",
+	BatonPass: "Set up at high HP, pass stat boosts to teammates.\n• Exits if no party members alive or move deals damage.\n• SD/DD/CM/Nasty Plot: +5 on turn 1; +1 if HP≥60%, else -10\n• Protect/Detect: +2 (or -2 if used last turn)\n• Baton Pass: -2 on turn 1; +1 to +3 based on Atk/SpA boosts\n• All other moves: ~92% chance of +3",
+	TagStrategy: "In doubles, benefit partner & avoid harming them.\n• Partner targeting: Skill Swap, Will-O-Wisp, Swagger, etc. scored\n  for partner synergy (e.g. Flash Fire, Motor Drive, Guts)\n• Score -30 for moves that don't benefit partner\n• Opponent targeting: effectiveness modifiers, Earthquake/Surf/\n  Discharge/Lava Plume partner safety checks\n• Weather scored for both self and partner abilities\n• Gravity/Trick Room: complex speed/partner checks",
+	CheckHP: "Discourage moves at wrong HP thresholds.\n• Self-Destruct: -2 if attacker HP≥31%\n• Recovery/Destiny Bond/Memento: -2 if attacker HP≥71%\n• Stat boosters/screens: -2 if attacker HP<70%\n• If target HP≤70%: -2 for stat moves, poison, status inducers\n• If target HP≤30%: additional -2 for status/OHKO/Explosion",
+	Weather: "Set up weather on the first turn of battle.\n• Only activates on turn 1 (possible bug — code suggests more was intended)\n• +5 for each weather move if that weather isn't already active",
+	Harassment: "Incentivize disruptive/harassing moves.\n• 50% chance of +2 for:\n  - Status-inducing moves (Sleep, Poison, Para, Burn, Confuse, Attract)\n  - 1-stage Atk/Def/Acc/Eva droppers\n  - 2-stage Atk/Def/Spe/SpD droppers\n  - Leech Seed, Encore, Spite, Spikes\n  - Swagger, Flatter, Torment, Knock Off\n  - Imprison, Tickle, Embargo, Toxic Spikes\n  - Psycho Shift, Captivate, Defog"
+};
+
 function renderFlagsBox(box, trainerName, label) {
 	var flags = (typeof aiFlags !== "undefined") && aiFlags && aiFlags[trainerName];
 
@@ -2407,12 +2583,17 @@ function renderFlagsBox(box, trainerName, label) {
 	for (var i = 0; i < flagOrder.length; i++) {
 		var key = flagOrder[i];
 		var on  = flags[key] === 1;
-		items += '<span class="ai-flag-item ' + (on ? "flag-on" : "flag-off") + '" title="' + key + '">' + key + '</span>';
+		var tooltip = AI_FLAG_TOOLTIPS[key] || key;
+		items += '<span class="ai-flag-item ' + (on ? "flag-on" : "flag-off") + '" title="' + tooltip.replace(/"/g, '&quot;') + '">' + key + '</span>';
 	}
+
+	// Build a concise AI behavior summary based on active flags
+	var summary = buildAIFlagSummary(flags);
 
 	box.html(
 		'<div class="ai-flags-label">' + label + '</div>' +
-		'<div class="ai-flag-list">' + items + '</div>'
+		'<div class="ai-flag-list">' + items + '</div>' +
+		(summary ? '<div class="ai-flags-summary">' + summary + '</div>' : '')
 	);
 	// Mark as populated so the settings toggle knows this box has real content
 	box.attr("data-has-flags", "true");
@@ -2423,6 +2604,40 @@ function renderFlagsBox(box, trainerName, label) {
 	} else {
 		box.addClass("hide");
 	}
+}
+
+/**
+ * Build a concise human-readable summary of a trainer's AI behavior based on active flags.
+ */
+function buildAIFlagSummary(flags) {
+	var parts = [];
+
+	// Count active flags for a complexity rating
+	var activeCount = 0;
+	for (var k in flags) {
+		if (flags[k] === 1) activeCount++;
+	}
+
+	if (flags.Basic === 1 && flags.EvaluateAttack === 1 && flags.Expert === 1) {
+		parts.push("Smart AI");
+	} else if (flags.Basic === 1 && flags.EvaluateAttack === 1) {
+		parts.push("Standard AI");
+	} else if (flags.Basic === 1) {
+		parts.push("Basic AI");
+	} else {
+		parts.push("Minimal AI");
+	}
+
+	if (flags.Setup === 1) parts.push("leads with setup");
+	if (flags.Weather === 1) parts.push("opens with weather");
+	if (flags.BatonPass === 1) parts.push("Baton Pass strategy");
+	if (flags.Risky === 1) parts.push("takes risks");
+	if (flags.DamagePriority === 1) parts.push("favors variable-power moves");
+	if (flags.CheckHP === 1) parts.push("HP-aware");
+	if (flags.Harassment === 1) parts.push("disruption-focused");
+	if (flags.TagStrategy === 1) parts.push("doubles-aware");
+
+	return parts.join(" · ");
 }
 
 $(document).ready(function () {
